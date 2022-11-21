@@ -31,8 +31,8 @@ def train_model(model, device, dataloaders, criterion, optimizer, num_epochs=230
             # Iterate over data.
             for inputs, labels in dataloaders[phase]:
                 inputs = inputs.to(device).float()
-                labels = labels.to(device).float()
-
+                labels = labels.to(device).float().reshape((labels.shape[0],1))
+                
                 # zero the parameter gradients
                 optimizer.zero_grad()
 
@@ -45,6 +45,13 @@ def train_model(model, device, dataloaders, criterion, optimizer, num_epochs=230
                     #   but in testing we only consider the final output.
                     
                     outputs = model(inputs).float()
+                    # print("outputs: " )
+                    # print(outputs.shape)
+                    # print("labels: " )
+                    # print(labels.shape)
+                    # if epoch == 150 or epoch == 10:
+                    #     print(outputs)
+                    #     print(labels)
                     loss = criterion(outputs, labels).float()
 
                     # backward + optimize only if in training phase
@@ -62,6 +69,8 @@ def train_model(model, device, dataloaders, criterion, optimizer, num_epochs=230
 
             print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
+            torch.save(model, "model.pt")
+
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
@@ -73,16 +82,16 @@ def train_model(model, device, dataloaders, criterion, optimizer, num_epochs=230
 
 def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+    device = "cpu"
     train_dataset = RDataset(mode="train")
     test_dataset = RDataset(mode="test")
 
     model = MLPNet(device=device).to(device).float()
 
-    criterion = torch.nn.MSELoss()
+    criterion = torch.nn.MSELoss().float()
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-    # optimizer = torch.optim.Adam()
+    # optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.002)
 
     dataloaders = {
         "train":DataLoader(train_dataset, batch_size=64, shuffle=False, num_workers=1),
@@ -93,7 +102,28 @@ def main():
 
     return 0
 
+def load_and_evaluate():
+    # model = MLPNet(device="cpu")
+    
+    model = torch.load("model.pt")
 
+    model.eval()
+    print(model)
+
+    dataset = RDataset(mode="test")
+
+    test_data, test_labels = dataset[:10]
+
+    test_data = torch.from_numpy(test_data).float()
+    # test_data = test_data.reshape((test_data.shape[0], 1)).T
+    print(test_data.shape)
+
+    output = model(test_data).float()
+
+    print("GT\t|\tPrediction " , output.shape, test_labels)
+    for i in range(0, test_labels.shape[0]):
+        print("{}\t\t\t{}\t\t{}".format(test_labels[i], output[i][0], abs(test_labels[i] - output[i][0])))
 
 if __name__ == "__main__":
     sys.exit(main())
+    # sys.exit(load_and_evaluate()())

@@ -9,12 +9,13 @@ RAND_TEST_INDICES = None
 class RDataset(Dataset):
     def __init__(self, mode="train", percentage_in_train=0.85):
         global RAND_TRAIN_INDICES, RAND_TEST_INDICES
-        results = pyreadr.read_r('../data/superconductivity_data_train.rda')
+        results = pyreadr.read_r('../data/superconductivity_data_train.rda')["data_train"].to_numpy()
 
-        self.data = results["data_train"].to_numpy()
-        self.data = self.data[:, :self.data.shape[1]-1]
-        self.labels = self.data[:, self.data.shape[1]-1]
+        
+        self.data = results[:, :results.shape[1]-1]
+        self.labels = results[:, results.shape[1]-1]
         print(self.data.shape, self.labels.shape)
+        print("labels: ", self.data.shape[1]-1,  self.labels[:10])
 
         if RAND_TRAIN_INDICES == None or RAND_TEST_INDICES == None:
             print("Create random indices.")
