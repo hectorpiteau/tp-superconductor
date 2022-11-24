@@ -8,15 +8,17 @@ from RDataset import RDataset
 from MLPNet import MLPNet
 import copy
 
-def train_model(model, device, dataloaders, criterion, optimizer, num_epochs=230):
+def train_model(model, device, dataloaders, criterion, optimizer, scheduler, num_epochs=230):
     val_acc_history = []
 
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
 
     for epoch in range(num_epochs):
+        scheduler.step()
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
+        print('lr : {:.8f}'.format(scheduler.get_lr()[0]))
 
         # Each epoch has a training and validation phase
         for phase in ['train', 'test']:
@@ -88,17 +90,19 @@ def main():
 
     model = MLPNet(device=device).to(device).float()
 
-    criterion = torch.nn.MSELoss().float()
+    criterion = torch.nn.HuberLoss().float()
 
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.002)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.9)
 
     dataloaders = {
         "train":DataLoader(train_dataset, batch_size=64, shuffle=False, num_workers=1),
         "test":DataLoader(test_dataset, batch_size=64, shuffle=False, num_workers=1)
     }
 
-    model = train_model(model, device, dataloaders=dataloaders, criterion=criterion, optimizer=optimizer)
+    model = train_model(model, device, dataloaders=dataloaders, criterion=criterion, optimizer=optimizer, scheduler=scheduler)
 
     return 0
 

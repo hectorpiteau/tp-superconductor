@@ -7,13 +7,19 @@ class MLPNet(nn.Module):
         self.device = device
         self.fc = nn.Sequential(
                                 # nn.Flatten(),
-                                nn.Linear(in_features=in_features, out_features=in_features),
-                                # nn.BatchNorm1d(in_features),
-                                # nn.ReLU(),
-                                # nn.Linear(in_features=in_features, out_features=in_features),
-                                # nn.BatchNorm1d(in_features),
+                                nn.Linear(in_features=in_features, out_features=128),
+                                nn.BatchNorm1d(128),
                                 nn.ReLU(),
-                                nn.Linear(in_features=in_features, out_features=1)).to(device)
+                                nn.Linear(in_features=128, out_features=128),
+                                nn.BatchNorm1d(128),
+                                nn.ReLU(),
+                                nn.Linear(in_features=128, out_features=64),
+                                nn.BatchNorm1d(64),
+                                nn.ReLU(),
+                                nn.Linear(in_features=64, out_features=32),
+                                nn.BatchNorm1d(32),
+                                nn.ReLU(),
+                                nn.Linear(in_features=32, out_features=1)).to(device)
     
     
     def forward(self, x):
