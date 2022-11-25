@@ -5,6 +5,8 @@ import utils as utils
 RAND_TRAIN_INDICES = None
 RAND_TEST_INDICES = None
 
+MIN_R = 0.0004
+MAX_R = 143.0
 
 class RDataset(Dataset):
     def __init__(self, mode="train", percentage_in_train=0.85):
@@ -36,4 +38,4 @@ class RDataset(Dataset):
     
     def __getitem__(self, idx):
         index = self.indices[idx]
-        return self.data[index], self.labels[index]
+        return self.data[index], (self.labels[index]-MIN_R)/(MAX_R - MIN_R)
